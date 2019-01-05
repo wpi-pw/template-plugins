@@ -29,13 +29,13 @@ do
         fi
     elif [ "${conf_app_plugins_single__package[$i]}" == "wpackagist" ]; then
         # Install plugin from wpackagist via composer
-        composer require wpackagist-plugin/${conf_app_plugins_single__name[$i]}:${conf_app_plugins_single__ver[$i]}
+        composer require wpackagist-plugin/${conf_app_plugins_single__name[$i]}:${conf_app_plugins_single__ver[$i]} --update-no-dev
     elif [ "${conf_app_plugins_single__package[$i]}" == "wp-pro-club" ]; then
         ## Install plugin from private bitbacket repository via composer
         project="${conf_app_plugins_single__package[$i]}/${conf_app_plugins_single__name[$i]}"
         project_ver=${conf_app_plugins_single__ver[$i]}
         project_zip="https://bitbucket.org/$project/get/$project_ver.zip"
         composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$project_ver'","type": "wordpress-plugin","dist": {"url": "'$project_zip'","type": "zip"}}}'
-        composer require $project:$project_ver
+        composer require $project:$project_ver --update-no-dev
     fi
 done
