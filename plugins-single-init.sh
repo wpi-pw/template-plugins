@@ -43,6 +43,6 @@ do
         project_ver=${conf_app_plugins_single__ver[$i]}
         project_zip="https://bitbucket.org/$project/get/$project_ver.zip"
         composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$project_ver'","type": "wordpress-plugin","dist": {"url": "'$project_zip'","type": "zip"}}}'
-        composer require $project:$project_ver --update-no-dev
+        composer require $project:dev-master --update-no-dev
     fi
 done
