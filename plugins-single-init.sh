@@ -41,7 +41,12 @@ do
         ## Install plugin from private bitbacket repository via composer
         project=${conf_app_plugins_single__name[$i]}
         project_ver=${conf_app_plugins_single__ver[$i]}
-        project_zip="https://bitbucket.org/$project/get/$project_ver.zip"
+        if [ ! -z "$conf_app_plugins_single__branch" ]; then
+            package_name=$conf_app_plugins_single__branch
+        else
+            package_name=$project_ver
+        fi
+        project_zip="https://bitbucket.org/$project/get/$package_name.zip"
         composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$project_ver'","type": "wordpress-plugin","dist": {"url": "'$project_zip'","type": "zip"}}}'
         composer require $project:dev-master --update-no-dev
     fi
