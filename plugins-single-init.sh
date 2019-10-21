@@ -17,76 +17,96 @@ source <(curl -s https://raw.githubusercontent.com/wpi-pw/template-workflow/mast
 cur_env=$1
 version=""
 zip="^(https|git)(:\/\/|@)([^\/:]+)[\/:]([^\/:]+)\/([^\/:]+)\/([^\/:]+)\/(.+).zip$"
+# Create array of plugin list and loop
+mapfile -t plugins < <( wpi_yq 'plugins.single.[*].name' )
 # Get all single plugins and run install by type
-for i in "${!wpi_plugins_single__name[@]}"
+for i in "${!plugins[@]}"
 do
-  printf "${GRN}=================================================${NC}\n"
-  printf "${GRN}Installing plugin ${wpi_plugins_single__name[$i]}${NC}\n"
-  printf "${GRN}=================================================${NC}\n"
+  printf "${GRN}====================================================${NC}\n"
+  printf "${GRN}Installing plugin $(wpi_yq plugins.single.[$i].name)${NC}\n"
+  printf "${GRN}====================================================${NC}\n"
   # Running plugin install via wp-cli
-  if [ "${wpi_plugins_single__package[$i]}" == "wp-cli" ]; then
+  if [ "$(wpi_yq plugins.single.[$i].package)" == "wp-cli" ]; then
     # Install from zip
-    if [[ ${wpi_plugins_single__package_zip[$i]} =~ $zip ]]; then
-      wp plugin install ${wpi_plugins_single__package_zip[$i]} --quiet
+    if [[ $(wpi_yq plugins.single.[$i].zip) =~ $zip ]]; then
+      wp plugin install $(wpi_yq plugins.single.[$i].zip) --quiet
     else
       # Get plugin version from config
-      if [ "${wpi_plugins_single__package_ver[$i]}" != "*" ]; then
-          version="--version=${wpi_plugins_single__package_ver[$i]} --force"
+      if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
+        version="--version=$(wpi_yq plugins.single.[$i].ver) --force"
       fi
       # Default plugin install via wp-cli
-      wp plugin install ${wpi_plugins_single__name[$i]} --quiet ${version}
+      wp plugin install $(wpi_yq plugins.single.[$i].name) --quiet ${version}
     fi
-  elif [ "${wpi_plugins_single__package[$i]}" == "bitbucket" ]; then
-    # Install plugin from private bitbacket repository via composer
-    project=${wpi_plugins_single__name[$i]}
-    project_ver=${wpi_plugins_single__package_ver[$i]}
-    composer=${wpi_plugins_single__install_composer[$i]}
+  elif [ "$(wpi_yq plugins.single.[$i].package)" == "bitbucket" ]; then
+    # Install plugin from private bitbucket repository via composer
+    project=$(wpi_yq plugins.single.[$i].name)
+    project_ver=$(wpi_yq plugins.single.[$i].ver)
     repo_name=$(echo ${project} | cut -d"/" -f2)
     no_dev="--no-dev"
+    
+    # Check for setup settings
+    if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
+      name=$(wpi_yq plugins.single.[$i].setup)
 
-    # OAUTH for bitbucket via key and secret
-    if [ ! -z "${wpi_plugins_single__package_key[$i]}" ] && [ ! -z "${wpi_plugins_single__package_secret[$i]}" ]; then
-      composer config --global --auth bitbucket-oauth.bitbucket.org ${wpi_plugins_single__package_key[$i]} ${wpi_plugins_single__package_secret[$i]}
+      # OAUTH for bitbucket via key and secret
+      if [ "$(wpi_yq plugins.setup.$name.bitbucket.key)" != "null" ] && [ "$(wpi_yq plugins.setup.$name.bitbucket.secret)" != "null" ]; then
+        composer config --global --auth bitbucket-oauth.bitbucket.org $(wpi_yq plugins.setup.$name.bitbucket.key) $(wpi_yq plugins.setup.$name.bitbucket.secret)
+      fi
     fi
 
-    # Get vcs for local and dev
+    # Get GIT for local and dev
     if [ "$cur_env" != "production" ] && [ "$cur_env" != "staging" ]; then
       # Reset --no-dev
       no_dev=""
 
       # Get plugin version from config
-      if [ "${wpi_plugins_single__package_ver[$i]}" != "*" ]; then
-          version=${wpi_plugins_single__package_ver[$i]}
+      if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
+          version=$(wpi_yq plugins.single.[$i].ver)
       else
           version="dev-master"
       fi
-      composer config repositories.$project '{"type":"vcs","url":"git@bitbucket.org:'$project'.git"}'
+      # Composer config and install - GIT version
+      composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$version'","type": "wordpress-plugin","source": {"url": "https://bitbucket.org/'$project'","type": "git","reference": "master"}}}'
       composer require $project:$version --update-no-dev --quiet
     else
       # Remove the package from composer cache
       if [ -d ~/.cache/composer/files/$project ]; then
         rm -rf ~/.cache/composer/files/$project
       fi
+      
+      # Get plugin version from config
+      if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
+          project_ver=$(wpi_yq plugins.single.[$i].ver)
+      else
+          project_ver="master"
+      fi
+      # Composer config and install - ZIP version      
       project_zip="https://bitbucket.org/$project/get/$project_ver.zip"
       composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$project_ver'","type": "wordpress-plugin","dist": {"url": "'$project_zip'","type": "zip"}}}'
       composer require $project:$project_ver --update-no-dev --quiet
     fi
 
-    # Run install scripts like composer/npm etc
-    if [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
-      composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
-    elif [ "$composer" == "dump-autoload" ]; then
-      composer -d ${PWD}/web/app/plugins/$repo_name dump-autoload -o --quiet
+    # Check if setup exist
+    if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
+      name=$(wpi_yq plugins.single.[$i].setup)
+      composer=$(wpi_yq plugins.setup.$name.composer)
+      # Run install composer script in the plugin
+      if [ "$composer" != "null" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
+        composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
+      elif [ "$composer" != "null" ] && [ "$composer" == "dump-autoload" ]; then
+        composer -d ${PWD}/web/app/plugins/$repo_name dump-autoload -o --quiet
+      fi
     fi
 
     # Run npm scripts
-    if [ "${wpi_plugins_single__install_npm[$i]}" == "install" ] ; then
+    if [ "$(wpi_yq plugins.setup.$name.npm" != "null" ]; then
       # run npm install
       npm i --prefix ${PWD}/web/app/plugins/$repo_name
       if [ "$cur_env" == "production" ] || [ "$cur_env" == "staging" ]; then
-        eval ${wpi_plugins_single__install_npm_prod[$i]} --prefix ${PWD}/web/app/plugins/$repo_name
+        eval $(wpi_yq plugins.setup.$name.npm.prod) --prefix ${PWD}/web/app/plugins/$repo_name
       else
-        eval ${wpi_plugins_single__install_npm_dev[$i]} --prefix ${PWD}/web/app/plugins/$repo_name
+        eval $(wpi_yq plugins.setup.$name.npm.dev) --prefix ${PWD}/web/app/plugins/$repo_name
       fi
     fi
   fi
