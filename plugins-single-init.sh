@@ -53,14 +53,14 @@ do
       wp plugin install $(wpi_yq plugins.single.[$i].zip) --quiet
     else
       # Get plugin version from config
-      if [ "$project_ver" != "null" ] && [ "$project_ver" != "*" ]; then
+      if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
         version="--version=$project_ver --force"
       fi
       # Default plugin install via wp-cli
       wp plugin install $(wpi_yq plugins.single.[$i].name) --quiet ${version}
     fi
   elif [ "$(wpi_yq plugins.single.[$i].package)" == "bitbucket" ]; then
-    # Install plugin from private bitbucket repository via composer
+    # Install plugin from private/public bitbucket repository via composer
     # Check for setup settings
     if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
       name=$(wpi_yq plugins.single.[$i].setup)
@@ -90,9 +90,7 @@ do
       composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$project_ver'","type": "wordpress-plugin","dist": {"url": "'$project_zip'","type": "zip"}}}'
       composer require $project:$project_ver --update-no-dev --quiet
     fi
-  fi
-
-  if [ "$(wpi_yq plugins.single.[$i].package)" == "github" ]; then
+  elif [ "$(wpi_yq plugins.single.[$i].package)" == "github" ]; then
     # Install plugin from private bitbucket repository via composer
     project=$(wpi_yq plugins.single.[$i].name)
     project_ver=$(wpi_yq plugins.single.[$i].ver)
@@ -103,7 +101,7 @@ do
     if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
       name=$(wpi_yq plugins.single.[$i].setup)
 
-      # OAUTH for bitbucket via key and secret
+      # OAUTH for github via key and secret
       if [ "$(wpi_yq init.setup.$name.github-token)" != "null" ] && [ "$(wpi_yq init.setup.$name.github-token)" != "null" ]; then
         composer config -g github-oauth.github.com $(wpi_yq init.setup.$name.github-token)
       fi
