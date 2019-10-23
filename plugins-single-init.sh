@@ -66,8 +66,8 @@ do
       name=$(wpi_yq plugins.single.[$i].setup)
 
       # OAUTH for bitbucket via key and secret
-      if [ "$(wpi_yq plugins.setup.$name.bitbucket.key)" != "null" ] && [ "$(wpi_yq plugins.setup.$name.bitbucket.secret)" != "null" ]; then
-        composer config --global --auth bitbucket-oauth.bitbucket.org $(wpi_yq plugins.setup.$name.bitbucket.key) $(wpi_yq plugins.setup.$name.bitbucket.secret)
+      if [ "$(wpi_yq init.setup.$name.bitbucket.key)" != "null" ] && [ "$(wpi_yq init.setup.$name.bitbucket.secret)" != "null" ]; then
+        composer config --global --auth bitbucket-oauth.bitbucket.org $(wpi_yq init.setup.$name.bitbucket.key) $(wpi_yq init.setup.$name.bitbucket.secret)
       fi
     fi
 
@@ -104,8 +104,8 @@ do
       name=$(wpi_yq plugins.single.[$i].setup)
 
       # OAUTH for bitbucket via key and secret
-      if [ "$(wpi_yq plugins.setup.$name.github-token)" != "null" ] && [ "$(wpi_yq plugins.setup.$name.github-token)" != "null" ]; then
-        composer config -g github-oauth.github.com $(wpi_yq plugins.setup.$name.github-token)
+      if [ "$(wpi_yq init.setup.$name.github-token)" != "null" ] && [ "$(wpi_yq init.setup.$name.github-token)" != "null" ]; then
+        composer config -g github-oauth.github.com $(wpi_yq init.setup.$name.github-token)
       fi
     fi
 
@@ -132,7 +132,7 @@ do
   # Check if setup exist
   if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
     name=$(wpi_yq plugins.single.[$i].setup)
-    composer=$(wpi_yq plugins.setup.$name.composer)
+    composer=$(wpi_yq init.setup.$name.composer)
     # Run install composer script in the plugin
     if [ "$composer" != "null" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
       composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
@@ -142,13 +142,13 @@ do
   fi
 
   # Run npm scripts
-  if [ "$(wpi_yq plugins.setup.$name.npm)" != "null" ]; then
+  if [ "$(wpi_yq init.setup.$name.npm)" != "null" ]; then
     # run npm install
     npm i --prefix ${PWD}/web/app/plugins/$repo_name
     if [ "$cur_env" == "production" ] || [ "$cur_env" == "staging" ]; then
-      eval $(wpi_yq plugins.setup.$name.npm.prod) --prefix ${PWD}/web/app/plugins/$repo_name
+      eval $(wpi_yq init.setup.$name.npm.prod) --prefix ${PWD}/web/app/plugins/$repo_name
     else
-      eval $(wpi_yq plugins.setup.$name.npm.dev) --prefix ${PWD}/web/app/plugins/$repo_name
+      eval $(wpi_yq init.setup.$name.npm.dev) --prefix ${PWD}/web/app/plugins/$repo_name
     fi
   fi
 done
