@@ -59,7 +59,7 @@ do
       # Default plugin install via wp-cli
       wp plugin install $(wpi_yq plugins.single.[$i].name) --quiet ${version}
     fi
-  elif [ "$(wpi_yq plugins.single.[$i].package)" == "bitbucket" ]; then
+  elif [ "$(wpi_yq plugins.single.[$i].package)" == "bitbucket" ] && [ "$(wpi_yq init.workflow)" == "bedrock" ]; then
     # Install plugin from private/public bitbucket repository via composer
     # Check for setup settings
     if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
@@ -90,7 +90,7 @@ do
       composer config repositories.$project '{"type":"package","package": {"name": "'$project'","version": "'$project_ver'","type": "wordpress-plugin","dist": {"url": "'$project_zip'","type": "zip"}}}'
       composer require $project:$project_ver --update-no-dev --quiet
     fi
-  elif [ "$(wpi_yq plugins.single.[$i].package)" == "github" ]; then
+  elif [ "$(wpi_yq plugins.single.[$i].package)" == "github" ] && [ "$(wpi_yq init.workflow)" == "bedrock" ]; then
     # Install plugin from private bitbucket repository via composer
     project=$(wpi_yq plugins.single.[$i].name)
     project_ver=$(wpi_yq plugins.single.[$i].ver)
