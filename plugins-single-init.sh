@@ -31,6 +31,7 @@ do
   no_dev="--no-dev"
   dev_commit=$(echo ${project_ver} | cut -d"#" -f1)
   ver_commit=$(echo ${project_ver} | cut -d"#" -f2)
+  setup_name=""
 
   # Get plugin version from config
   if [ "$project_ver" != "null" ] && [ "$project_ver" != "*" ]; then
@@ -95,6 +96,7 @@ do
     project=$(wpi_yq plugins.single.[$i].name)
     project_ver=$(wpi_yq plugins.single.[$i].ver)
     repo_name=$(echo ${project} | cut -d"/" -f2)
+    setup_name=$(wpi_yq plugins.single.[$i].setup)
     no_dev="--no-dev"
 
     # Check for setup settings
@@ -128,25 +130,27 @@ do
   fi
 
   # Check if setup exist
-  if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
-    name=$(wpi_yq plugins.single.[$i].setup)
-    composer=$(wpi_yq init.setup.$name.composer)
+  if [ "$setup_name" != "null" ]; then
+    composer=$(wpi_yq init.setup.$setup_name.composer)
     # Run install composer script in the plugin
     if [ "$composer" != "null" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
       composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
     elif [ "$composer" != "null" ] && [ "$composer" == "dump-autoload" ]; then
       composer -d ${PWD}/web/app/plugins/$repo_name dump-autoload -o --quiet
     fi
-  fi
 
-  # Run npm scripts
-  if [ "$(wpi_yq init.setup.$name.npm)" != "null" ]; then
-    # run npm install
-    npm i &> /dev/null --prefix ${PWD}/web/app/plugins/$repo_name
-    if [ "$cur_env" == "production" ] && [ "$cur_env" == "staging" ]; then
-      eval $(wpi_yq init.setup.$name.npm.prod) --prefix ${PWD}/web/app/plugins/$repo_name
-    else
-      eval $(wpi_yq init.setup.$name.npm.dev) --prefix ${PWD}/web/app/plugins/$repo_name
+    # Run npm scripts
+    if [ "$(wpi_yq init.setup.$setup_name.npm)" != "null" ]; then
+      echo $(wpi_yq init.setup.$setup_name.npm)
+      if [ "$cur_env" == "production" ] && [ "$cur_env" == "staging" ]; then
+        # run npm install
+        npm i &> /dev/null --production --prefix ${PWD}/web/app/plugins/$repo_name
+        eval $(wpi_yq init.setup.$setup_name.npm.prod) --prefix ${PWD}/web/app/plugins/$repo_name
+      else
+        # run npm install
+        npm i &> /dev/null --prefix ${PWD}/web/app/plugins/$repo_name
+        eval $(wpi_yq init.setup.$setup_name.npm.dev) --prefix ${PWD}/web/app/plugins/$repo_name
+      fi
     fi
   fi
 done
