@@ -31,7 +31,7 @@ do
   no_dev="--no-dev"
   dev_commit=$(echo ${project_ver} | cut -d"#" -f1)
   ver_commit=$(echo ${project_ver} | cut -d"#" -f2)
-  setup_name=""
+  setup_name=$(wpi_yq plugins.single.[$i].setup)
 
   # Get plugin version from config
   if [ "$project_ver" != "null" ] && [ "$project_ver" != "*" ]; then
@@ -96,7 +96,6 @@ do
     project=$(wpi_yq plugins.single.[$i].name)
     project_ver=$(wpi_yq plugins.single.[$i].ver)
     repo_name=$(echo ${project} | cut -d"/" -f2)
-    setup_name=$(wpi_yq plugins.single.[$i].setup)
     no_dev="--no-dev"
 
     # Check for setup settings
