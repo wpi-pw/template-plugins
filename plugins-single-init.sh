@@ -135,10 +135,10 @@ do
     if [ "$composer" != "null" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
       composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
     elif [ "$composer" != "null" ] && [ "$composer" == "dump-autoload" ]; then
-      composer -d ${PWD}/web/app/plugins/$repo_name dump-autoload -o --quiet
+      composer dump-autoload -o -d ${PWD}/web/app/plugins/$repo_name --quiet
     elif [ "$composer" != "null" ] && [ "$composer" == "install && dump-autoload" ]; then
       composer install -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
-      composer -d ${PWD}/web/app/plugins/$repo_name dump-autoload -o --quiet
+      composer dump-autoload -o -d ${PWD}/web/app/plugins/$repo_name --quiet
     fi
 
     # Run npm scripts
