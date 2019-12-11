@@ -14,7 +14,7 @@ done
 # Get wpi-source for yml parsing, noroot, errors etc
 source <(curl -s https://raw.githubusercontent.com/wpi-pw/template-workflow/master/wpi-source.sh)
 
-cur_env=$1
+cur_env=$(cur_env)
 version=""
 zip="^(https|git)(:\/\/|@)([^\/:]+)[\/:]([^\/:]+)\/([^\/:]+)\/([^\/:]+)\/(.+).zip$"
 # Create array of plugin list and loop
@@ -47,6 +47,16 @@ do
     ver_commit="master"
   fi
 
+  # Get plugin branch keys
+  mapfile -t branch < <( wpi_yq "plugins.single.[$i].branch" 'keys' )
+  # Get plugin branch by current env
+  for i in "${!branch[@]}"
+  do
+    if [ "${branch[$i]}" == $cur_env ]; then
+      ver_commit=$(wpi_yq "plugins.single.[$i].branch.$cur_env")
+    fi
+  done
+
   # Running plugin install via wp-cli
   if [ "$(wpi_yq plugins.single.[$i].package)" == "wp-cli" ]; then
     # Install from zip
@@ -73,7 +83,7 @@ do
     fi
 
     # Get GIT for local and dev
-    if [ "$cur_env" != "production" ] && [ "$cur_env" != "staging" ]; then
+    if [ "$cur_env" == "local" ] || [ "$cur_env" == "dev" ]; then
       # Reset --no-dev
       no_dev=""
 
@@ -109,7 +119,7 @@ do
     fi
 
     # Get GIT for local and dev
-    if [ "$cur_env" != "production" ] && [ "$cur_env" != "staging" ]; then
+    if [ "$cur_env" == "local" ] || [ "$cur_env" == "dev" ]; then
       # Reset --no-dev
       no_dev=""
 
