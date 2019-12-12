@@ -153,13 +153,11 @@ do
 
     # Run npm scripts
     if [ "$(wpi_yq init.setup.$setup_name.npm)" != "null" ]; then
+      # run npm install
+      npm i &> /dev/null --prefix ${PWD}/web/app/plugins/$repo_name
       if [ "$cur_env" == "production" ] && [ "$cur_env" == "staging" ]; then
-        # run npm install
-        npm i &> /dev/null --production --prefix ${PWD}/web/app/plugins/$repo_name
         eval $(wpi_yq init.setup.$setup_name.npm.prod) --prefix ${PWD}/web/app/plugins/$repo_name
       else
-        # run npm install
-        npm i &> /dev/null --prefix ${PWD}/web/app/plugins/$repo_name
         eval $(wpi_yq init.setup.$setup_name.npm.dev) --prefix ${PWD}/web/app/plugins/$repo_name
       fi
     fi
