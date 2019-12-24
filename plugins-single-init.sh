@@ -61,14 +61,14 @@ do
   if [ "$(wpi_yq plugins.single.[$i].package)" == "wp-cli" ]; then
     # Install from zip
     if [[ $(wpi_yq plugins.single.[$i].zip) =~ $zip ]]; then
-      wp plugin install $(wpi_yq plugins.single.[$i].zip) --quiet
+      wp plugin install $(wpi_yq plugins.single.[$i].zip) --force --quiet
     else
       # Get plugin version from config
       if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
         version="--version=$project_ver --force"
       fi
       # Default plugin install via wp-cli
-      wp plugin install $(wpi_yq plugins.single.[$i].name) --quiet ${version}
+      wp plugin install $(wpi_yq plugins.single.[$i].name) --force --quiet ${version}
     fi
   elif [ "$(wpi_yq plugins.single.[$i].package)" == "bitbucket" ] && [ "$(wpi_yq init.workflow)" == "bedrock" ]; then
     # Install plugin from private/public bitbucket repository via composer
