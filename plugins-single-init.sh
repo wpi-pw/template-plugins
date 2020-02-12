@@ -15,7 +15,6 @@ done
 source <(curl -s https://raw.githubusercontent.com/wpi-pw/template-workflow/master/wpi-source.sh)
 
 cur_env=$(cur_env)
-version=""
 zip="^(https|git)(:\/\/|@)([^\/:]+)[\/:]([^\/:]+)\/([^\/:]+)\/([^\/:]+)\/(.+).zip$"
 # Create array of plugin list and loop
 mapfile -t plugins < <( wpi_yq 'plugins.single.[*].name' )
@@ -25,6 +24,7 @@ do
   printf "${GRN}====================================================${NC}\n"
   printf "${GRN}Installing plugin $(wpi_yq plugins.single.[$i].name)${NC}\n"
   printf "${GRN}====================================================${NC}\n"
+  version=""
   project=$(wpi_yq plugins.single.[$i].name)
   project_ver=$(wpi_yq plugins.single.[$i].ver)
   repo_name=$(echo ${project} | cut -d"/" -f2)
