@@ -34,7 +34,7 @@ do
   setup_name=$(wpi_yq plugins.single.[$i].setup)
 
   # Get plugin version from config
-  if [ "$project_ver" != "null" ] && [ "$project_ver" != "*" ]; then
+  if [ "$project_ver" != "null" ] && [ "$project_ver" ] && [ "$project_ver" != "*" ]; then
     json_ver=$project_ver
     # check for commit version
     if [ "$dev_commit" == "dev-master" ]; then
@@ -64,7 +64,7 @@ do
       wp plugin install $(wpi_yq plugins.single.[$i].zip) --force --quiet
     else
       # Get plugin version from config
-      if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
+      if [ "$(wpi_yq plugins.single.[$i].ver)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].ver)" ] && [ "$(wpi_yq plugins.single.[$i].ver)" != "*" ]; then
         version="--version=$project_ver --force"
       fi
       # Default plugin install via wp-cli
@@ -73,11 +73,11 @@ do
   elif [ "$(wpi_yq plugins.single.[$i].package)" == "bitbucket" ] && [ "$(wpi_yq init.workflow)" == "bedrock" ]; then
     # Install plugin from private/public bitbucket repository via composer
     # Check for setup settings
-    if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
+    if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].setup)" ]; then
       name=$(wpi_yq plugins.single.[$i].setup)
 
       # OAUTH for bitbucket via key and secret
-      if [ "$(wpi_yq init.setup.$name.bitbucket.key)" != "null" ] && [ "$(wpi_yq init.setup.$name.bitbucket.secret)" != "null" ]; then
+      if [ "$(wpi_yq init.setup.$name.bitbucket.key)" != "null" ] && [ "$(wpi_yq init.setup.$name.bitbucket.key)" ] && [ "$(wpi_yq init.setup.$name.bitbucket.secret)" != "null" ] && [ "$(wpi_yq init.setup.$name.bitbucket.secret)" ]; then
         composer config --global --auth bitbucket-oauth.bitbucket.org $(wpi_yq init.setup.$name.bitbucket.key) $(wpi_yq init.setup.$name.bitbucket.secret)
       fi
     fi
@@ -109,11 +109,11 @@ do
     no_dev="--no-dev"
 
     # Check for setup settings
-    if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ]; then
+    if [ "$(wpi_yq plugins.single.[$i].setup)" != "null" ] && [ "$(wpi_yq plugins.single.[$i].setup)" ]; then
       name=$(wpi_yq plugins.single.[$i].setup)
 
       # OAUTH for github via key and secret
-      if [ "$(wpi_yq init.setup.$name.github-token)" != "null" ] && [ "$(wpi_yq init.setup.$name.github-token)" != "null" ]; then
+      if [ "$(wpi_yq init.setup.$name.github-token)" != "null" ] && [ "$(wpi_yq init.setup.$name.github-token)" != "null" ] && [ "$(wpi_yq init.setup.$name.github-token)" ]; then
         composer config -g github-oauth.github.com $(wpi_yq init.setup.$name.github-token)
       fi
     fi
@@ -139,20 +139,20 @@ do
   fi
 
   # Check if setup exist
-  if [ "$setup_name" != "null" ]; then
+  if [ "$setup_name" != "null" ] && [ "$setup_name" ]; then
     composer=$(wpi_yq init.setup.$setup_name.composer)
     # Run install composer script in the plugin
-    if [ "$composer" != "null" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
+    if [ "$composer" != "null" ] && [ "$composer" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
       composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
-    elif [ "$composer" != "null" ] && [ "$composer" == "dump-autoload" ]; then
+    elif [ "$composer" != "null" ] && [ $composer ] && [ "$composer" == "dump-autoload" ]; then
       composer dump-autoload -o -d ${PWD}/web/app/plugins/$repo_name --quiet
-    elif [ "$composer" != "null" ] && [ "$composer" == "install && dump-autoload" ]; then
+    elif [ "$composer" != "null" ] && [ $composer ] && [ "$composer" == "install && dump-autoload" ]; then
       composer install -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
       composer dump-autoload -o -d ${PWD}/web/app/plugins/$repo_name --quiet
     fi
 
     # Run npm scripts
-    if [ "$(wpi_yq init.setup.$setup_name.npm)" != "null" ]; then
+    if [ "$(wpi_yq init.setup.$setup_name.npm)" != "null" ] && [ "$(wpi_yq init.setup.$setup_name.npm)" ]; then
       # run npm install
       npm i &> /dev/null --prefix ${PWD}/web/app/plugins/$repo_name
       if [ "$cur_env" == "production" ] && [ "$cur_env" == "staging" ]; then
