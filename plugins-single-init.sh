@@ -21,9 +21,6 @@ mapfile -t plugins < <( wpi_yq 'plugins.single.[*].name' )
 # Get all single plugins and run install by type
 for i in "${!plugins[@]}"
 do
-  printf "${GRN}====================================================${NC}\n"
-  printf "${GRN}Installing plugin $(wpi_yq plugins.single.[$i].name)${NC}\n"
-  printf "${GRN}====================================================${NC}\n"
   version=""
   project=$(wpi_yq plugins.single.[$i].name)
   project_ver=$(wpi_yq plugins.single.[$i].ver)
@@ -32,6 +29,25 @@ do
   dev_commit=$(echo ${project_ver} | cut -d"#" -f1)
   ver_commit=$(echo ${project_ver} | cut -d"#" -f2)
   setup_name=$(wpi_yq plugins.single.[$i].setup)
+
+  # Switch package to symlink for specific environment
+  if [[ "$(wpi_yq plugins.single.[$i].symlink.env)" == "$cur_env" ]]; then
+    symlink_env=$(wpi_yq plugins.single.[$i].symlink.env)
+    symlink_path=$(wpi_yq plugins.single.[$i].symlink.path)
+    app_path=$(wpi_yq env.$symlink_env.app_dir)
+    app_content=$(wpi_yq env.$symlink_env.app_content)
+    if [[ -d "$symlink_path" ]]; then
+      printf "${GRN}====================================================${NC}\n"
+      printf "${GRN}Creating symlink for $repo_name                     ${NC}\n"
+      printf "${GRN}====================================================${NC}\n"
+      ln -s $symlink_path ${app_path%/}${app_content%/}/plugins/$repo_name
+      continue
+    fi
+  fi
+
+  printf "${GRN}====================================================${NC}\n"
+  printf "${GRN}Installing plugin $(wpi_yq plugins.single.[$i].name)${NC}\n"
+  printf "${GRN}====================================================${NC}\n"
 
   # Get plugin version from config
   if [ "$project_ver" != "null" ] && [ "$project_ver" ] && [ "$project_ver" != "*" ]; then
