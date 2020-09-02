@@ -160,9 +160,9 @@ do
     # Run install composer script in the plugin
     if [ "$composer" != "null" ] && [ "$composer" ] && [ "$composer" == "install" ] || [ "$composer" == "update" ]; then
       composer $composer -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
-    elif [ "$composer" != "null" ] && [ $composer ] && [ "$composer" == "dump-autoload" ]; then
+    elif [ "$composer" != "null" ] && [ "$composer" ] && [ "$composer" == "dump-autoload" ]; then
       composer dump-autoload -o -d ${PWD}/web/app/plugins/$repo_name --quiet
-    elif [ "$composer" != "null" ] && [ $composer ] && [ "$composer" == "install && dump-autoload" ]; then
+    elif [ "$composer" != "null" ] && [ "$composer" ] && [ "$composer" == "install && dump-autoload" ]; then
       composer install -d ${PWD}/web/app/plugins/$repo_name $no_dev --quiet
       composer dump-autoload -o -d ${PWD}/web/app/plugins/$repo_name --quiet
     fi
