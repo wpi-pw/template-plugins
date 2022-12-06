@@ -69,7 +69,18 @@ do
   for i in "${!branch[@]}"
   do
     if [ "${branch[$i]}" == $cur_env ]; then
-      ver_commit=$(wpi_yq "plugins.single.[$i].branch.$cur_env")
+      # Current branch name
+      branch_name=$(wpi_yq "plugins.single.[$i].branch.$cur_env")
+      # Current setup name
+      name=$(wpi_yq plugins.single.[$i].setup)
+      # Create oauth token by key:secret
+      bitbucket_token=$(curl -s -X POST -u "$(wpi_yq init.setup.$name.bitbucket.key):$(wpi_yq init.setup.$name.bitbucket.secret)" "https://bitbucket.org/site/oauth2/access_token" -d grant_type=client_credentials | jq -r ".access_token")
+      # Get the last commit of current branch
+      branch_commit_id=$(curl -s --request GET \
+      --url "https://api.bitbucket.org/2.0/repositories/$project/commits/$branch_name" \
+      --header "Authorization: Bearer $bitbucket_token" \
+      --header "Accept: application/json" | jq -r ".values[0].hash")
+      ver_commit=$branch_commit_id
     fi
   done
 
