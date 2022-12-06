@@ -66,9 +66,9 @@ do
   # Get plugin branch keys
   mapfile -t branch < <( wpi_yq "plugins.single.[$i].branch" 'keys' )
   # Get plugin branch by current env
-  for i in "${!branch[@]}"
+  for b in "${!branch[@]}"
   do
-    if [ "${branch[$i]}" == $cur_env ]; then
+    if [ "${branch[$b]}" == $cur_env ]; then
       # Current branch name
       branch_name=$(wpi_yq "plugins.single.[$i].branch.$cur_env")
       # Current setup name
